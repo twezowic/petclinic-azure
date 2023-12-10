@@ -34,3 +34,13 @@ Uzyskujemy połącznie przez nginx.
 
 ## 5
 ``` ansible-playbook playbook5.yaml -i inventory.yaml```
+
+Deploy-ujemy replikę bazy danych na maszynie wirtualnej backend, nginx jest po stronie frontendu, i dostaje jako argument dwa porty jako dwie instancje backendu do obsługi.
+
+konfiguracja zakończyła się pomyślnie, wszystkie taski były zakończone sukcesem
+![image.png](photos/lab2_11.png)
+
+w logach po włączeniu playbooka, możemy zobaczyć "Replica_SQL_Running_State: Replica has read all relay log; waiting for more updates"
+co oznacza że replika jest poprawnie skonfigurowana, i podłączyła się do głównego serwera mysql.
+
+![image.png](photos/lab2_10.png)
