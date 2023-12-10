@@ -43,7 +43,14 @@ cat ./populateDB.sql | sudo mysql -f
 
 sudo service mysql restart
 
-sudo mysql -e "CHANGE MASTER TO MASTER_HOST='$MASTER_ADDRESS', MASTER_PORT='$MASTER_PORT', MASTER_PASSWORD='slavepassword', MASTER_USER='repl';"
+sudo mysql -e "
+CHANGE REPLICATION SOURCE TO
+SOURCE_HOST='$MASTER_ADDRESS',
+SOURCE_PORT = $MASTER_PORT,
+SOURCE_USER='repl',
+SOURCE_PASSWORD='slavepassword',
+GET_MASTER_PUBLIC_KEY=1;"
+
 sudo mysql -v -e "FLUSH PRIVILEGES;"
 sudo mysql -v -e "START SLAVE;"
-sudo mysql -v -e "SHOW SLAVE STATUS\G;"
+sudo mysql -v -e "SHOW REPLICA STATUS\G;"

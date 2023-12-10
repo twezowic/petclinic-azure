@@ -16,6 +16,8 @@ RESOURCE_GROUP="$(jq -r '.resource_group' "$CONFIG_FILE")"
 
 echo $RESOURCE_GROUP
 
+az login
+
 az group create --name $RESOURCE_GROUP --location westeurope
 
 # Network
@@ -246,3 +248,5 @@ for PUBLIC_IP in "${PUBLIC_IPS[@]}"; do
         --query "ipAddress" \
         --output tsv
 done
+
+az logout
