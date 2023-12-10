@@ -1,0 +1,37 @@
+- name: Clone a github repository
+  git:
+    repo: https://github.com/spring-petclinic/spring-petclinic-angular.git
+    dest: /home/azureuser/frontend/spring-petclinic-angular
+    clone: yes
+    update: yes
+
+- name: Change address and port
+  ansible.builtin.replace:
+    path: "/home/azureuser/frontend/spring-petclinic-angular/src/environments/environment.ts"
+    regexp: '^  REST_API_URL:.+'
+    replace: "  REST_API_URL: 'http://{{frontend_backend_ip}}:{{frontend_backend_port}}/petclinic/api/'"
+- name: Change address and port
+  ansible.builtin.replace:
+    path: "/home/azureuser/frontend/spring-petclinic-angular/src/environments/environment.prod.ts"
+    regexp: "^  REST_API_URL:.+"
+    replace: "  REST_API_URL: 'http://{{frontend_backend_ip}}:{{frontend_backend_port}}/petclinic/api/'"
+
+- name: Copy script
+  ansible.builtin.copy:
+    src: front.sh
+    dest: /home/azureuser/front.sh
+- name: Give access permission to run script
+  ansible.builtin.command:
+    cmd: chmod +x front.sh
+    chdir: /home/azureuser/
+- name: Run front.sh
+  ansible.builtin.script:
+    cmd: front.sh
+    chdir: /home/azureuser/
+
+- name: Start frontend
+  ansible.builtin.shell:
+    cmd: |
+      export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+      cd /home/azureuser/frontend/spring-petclinic-angular; nohup npx angular-http-server --path /home/azureuser/frontend/spring-petclinic-angular/dist -p 8080 > /home/azureuser/frontend/frontend_log.txt 2>&1 &

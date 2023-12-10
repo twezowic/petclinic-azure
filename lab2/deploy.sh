@@ -12,6 +12,8 @@ CONFIG_FILE="$1"
 
 echo $CONFIG_FILE
 
+az login
+
 RESOURCE_GROUP="$(jq -r '.resource_group' "$CONFIG_FILE")"
 
 echo $RESOURCE_GROUP
@@ -24,8 +26,7 @@ NETWORK_ADDRESS_PREFIX="$(jq -r '.network.address_prefix' "$CONFIG_FILE")"
 az network vnet create \
     --resource-group $RESOURCE_GROUP \
     --name VNet \
-    --address-prefix $NETWORK_ADDRESS_PREFIX \
-    --no-wait
+    --address-prefix $NETWORK_ADDRESS_PREFIX
 
 # Network Security Group
 readarray -t NETWORK_SECURITY_GROUPS < <(jq -c '.network_security_group[]' "$CONFIG_FILE")
@@ -61,8 +62,7 @@ for GROUP in "${NETWORK_SECURITY_GROUPS[@]}"; do
             --source-address-prefix "$RULE_SOURCE_ADDRESS_PREFIX" \
             --source-port-range "$RULE_SOURCE_PORT_RANGES" \
             --destination-address-prefix "$RULE_DESTINATION_ADDRESS_PREFIX" \
-            --destination-port-range "$RULE_DESTINATION_PORT_RANGES" \
-            --no-wait
+            --destination-port-range "$RULE_DESTINATION_PORT_RANGES"
     done
 done
 
@@ -82,8 +82,7 @@ for SUBNET in "${SUBNETS[@]}"; do
         --vnet-name VNet \
         --name $SUBNET_NAME \
         --address-prefix $SUBNET_ADDRESS_PREFIX \
-        --network-security-group "$SUBNET_NETWORK_SECURITY_GROUP" \
-        --no-wait
+        --network-security-group "$SUBNET_NETWORK_SECURITY_GROUP"
 done
 
 # Public IP
@@ -121,24 +120,11 @@ for VM in "${VIRTUAL_MACHINES[@]}"; do
         --image Ubuntu2204 \
         --admin-username azureuser \
         --admin-password MaciekMaciek1! \
-        --generate-ssh-keys \
-        --no-wait
+        --generate-ssh-keys
 done
 
 echo "WAITING FOR VIRTUAL MACHINES..."
 
 az vm wait --created --ids $(az vm list -g $RESOURCE_GROUP --query "[].id" -o tsv)
 
-
-
-for PUBLIC_IP in "${PUBLIC_IPS[@]}"; do
-    echo $PUBLIC_IP
-
-    PUBLIC_IP_NAME=$(jq -r '.name' <<<$PUBLIC_IP)
-
-    az network public-ip show \
-        --resource-group "$RESOURCE_GROUP" \
-        --name "$PUBLIC_IP_NAME" \
-        --query "ipAddress" \
-        --output tsv
-done
+./change.sh

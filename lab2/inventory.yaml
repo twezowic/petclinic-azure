@@ -1,0 +1,14 @@
+all:
+  hosts:
+        front_vm:
+          ansible_host: 23.97.186.142
+          ansible_password: MaciekMaciek1!
+          ansible_user: azureuser
+        back_vm:
+          ansible_host: 23.101.76.200
+          ansible_password: MaciekMaciek1!
+          ansible_user: azureuser
+        database_vm:
+          ansible_host: 104.45.26.208
+          ansible_password: MaciekMaciek1!
+          ansible_user: azureuser

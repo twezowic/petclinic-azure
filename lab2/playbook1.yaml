@@ -1,0 +1,32 @@
+- hosts:
+  - all
+  become: true
+  pre_tasks:
+    - name: Update repository index
+      apt:
+        update_cache: yes
+
+    - name: Upgrade packages
+      apt:
+        upgrade: dist
+- hosts:
+  - database_vm
+  become: true
+  vars_files:
+  - config_1.yaml
+  roles:
+   - db
+- hosts:
+  - back_vm
+  become: true
+  vars_files:
+  - config_1.yaml
+  roles:
+    - back
+- hosts:
+  - front_vm
+  become: true
+  vars_files:
+  - config_1.yaml
+  roles:
+    - front

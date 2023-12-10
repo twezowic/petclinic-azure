@@ -1,0 +1,59 @@
+- name: Restart sql
+  ansible.builtin.shell:
+    cmd: "apt-get autoremove -y"
+- name: Install sql
+  ansible.builtin.package:
+    name:
+      - mysql-server
+    state: present
+- name: Download initdb
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/spring-petclinic/spring-petclinic-rest/master/src/main/resources/db/mysql/initDB.sql"
+    dest: /home/azureuser/initDB.sql
+- name: Download populatedb
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/spring-petclinic/spring-petclinic-rest/master/src/main/resources/db/mysql/populateDB.sql"
+    dest: /home/azureuser/populateDB.sql
+- name: Create user file
+  ansible.builtin.file:
+    path: /home/azureuser/user.sql
+    state: touch
+- name: Write user file
+  ansible.builtin.lineinfile:
+    path: /home/azureuser/user.sql
+    line: "CREATE USER 'user'@'%' IDENTIFIED BY 'password';\nGRANT ALL PRIVILEGES ON *.* TO 'user'@'%' WITH GRANT OPTION;"
+- name: Add log location
+  ansible.builtin.blockinfile:
+    path: "/etc/mysql/mysql.conf.d/mysqld.cnf"
+    block: |
+         log_bin = /var/log/mysql/mysql-bi.log
+- name: Change bind address
+  ansible.builtin.replace:
+    path: "/etc/mysql/mysql.conf.d/mysqld.cnf"
+    regexp: '^bind-address\s+=\s+127.0.0.1'
+    replace: 'bind-address = 0.0.0.0'
+- name: Change mysqlx-bind-address
+  ansible.builtin.replace:
+    path: "/etc/mysql/mysql.conf.d/mysqld.cnf"
+    regexp: '^mysqlx-bind-address\s+=\s+127.0.0.1'
+    replace: 'mysqlx-bind-address = 0.0.0.0'
+- name: Add use table
+  ansible.builtin.lineinfile:
+    path: "/home/azureuser/populateDB.sql"
+    insertbefore: BOF
+    line: 'USE petclinic;'
+- name: Initialize user
+  ansible.builtin.shell:
+    cmd: "cat user.sql | sudo mysql -f"
+- name: Initialize tables
+  ansible.builtin.shell:
+    cmd: "cat initDB.sql | sudo mysql -f"
+- name: Populate tables
+  ansible.builtin.shell:
+    cmd: "cat populateDB.sql | sudo mysql -f"
+- name: Flush PRIVILEGES
+  ansible.builtin.shell:
+    cmd: mysql -v -e "FLUSH PRIVILEGES;"
+- name: Restart sql
+  ansible.builtin.shell:
+    cmd: "service mysql restart"

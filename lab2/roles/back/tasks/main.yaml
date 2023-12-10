@@ -1,0 +1,51 @@
+- name: Clone a github repository
+  git:
+    repo: https://github.com/spring-petclinic/spring-petclinic-rest.git
+    dest: /home/azureuser/{{item.name}}/spring-petclinic-rest
+    clone: yes
+    update: yes
+  loop: "{{ backends }}"
+
+- name: Install java
+  ansible.builtin.package:
+    name: openjdk-17-jdk
+    state: present
+
+- name: Change database type
+  ansible.builtin.replace:
+    path: "{{item.name}}/spring-petclinic-rest/src/main/resources/application.properties"
+    regexp: '=hsqldb'
+    replace: '=mysql'
+  loop: "{{ backends }}"
+
+- name: Change port
+  ansible.builtin.replace:
+    path: "{{item.name}}/spring-petclinic-rest/src/main/resources/application.properties"
+    regexp: '^server.port=.+'
+    replace: 'server.port={{ item.backend_port }}'
+  loop: "{{ backends }}"
+
+- name: Change database address and port
+  ansible.builtin.replace:
+    path: "{{item.name}}/spring-petclinic-rest/src/main/resources/application-mysql.properties"
+    regexp: '^spring\.datasource\.url = jdbc:mysql:\/\/.*\/petclinic\?'
+    replace: 'spring.datasource.url = jdbc:mysql://{{ db_ip }}:{{ db_port }}/petclinic?'
+  loop: "{{ backends }}"
+
+- name: Change database user
+  ansible.builtin.replace:
+    path: "{{item.name}}/spring-petclinic-rest/src/main/resources/application-mysql.properties"
+    regexp: '^spring.datasource.username=.+'
+    replace: 'spring.datasource.username=user'
+  loop: "{{ backends }}"
+
+- name: Change database password
+  ansible.builtin.replace:
+    path: "{{item.name}}/spring-petclinic-rest/src/main/resources/application-mysql.properties"
+    regexp: '^spring.datasource.password=.+'
+    replace: 'spring.datasource.password=password'
+  loop: "{{ backends }}"
+
+- name: Start backend
+  shell: cd /home/azureuser/{{item.name}}/spring-petclinic-rest; nohup ./mvnw spring-boot:run &
+  loop: "{{ backends }}"

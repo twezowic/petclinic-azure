@@ -1,0 +1,32 @@
+- name: Install ngix
+  ansible.builtin.package:
+    name:
+      - nginx
+    state: present
+
+- name: Create loadbalancer file
+  ansible.builtin.file:
+    path: /etc/nginx/conf.d/loadbalancer.conf
+    state: touch
+
+- name: Generate loadbalancer configuration
+  ansible.builtin.blockinfile:
+    path: /etc/nginx/conf.d/loadbalancer.conf
+    block: |
+      upstream backend {
+      {% for port in backend_ports %}
+          server {{ ngix_ip }}:{{ port }};
+      {% endfor %}
+      }
+
+      server {
+          listen      {{ nginx_port }};
+
+          location /petclinic/api {
+              proxy_pass http://backend;
+          }
+      }
+- name: Reload Nginx
+  ansible.builtin.service:
+    name: nginx
+    state: reloaded
