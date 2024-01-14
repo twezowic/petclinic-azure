@@ -5,7 +5,6 @@ sed -i '/- wavefront/d'  manifest.yml
 
 cd k8s/
 
-sed -i 's/replicas: 1/replicas: 2/' api-gateway-deployment.yaml
 sed -i 's/            cpu: 2000m/            cpu: 0.5/' api-gateway-deployment.yaml
 sed -i 's/replicas: 1/replicas: 2/' customers-service-deployment.yaml
 sed -i 's/replicas: 1/replicas: 2/' vets-service-deployment.yaml
